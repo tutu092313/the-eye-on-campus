@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>暗处的眼：校园未被看见的守护者</title>
+<style>
+  :root{
+    --paper:#f4efe6;
+    --paper-deep:#ece5d8;
+    --cream:#fffdf7;
+    --ink:#3f3a33;
+    --ink-soft:#6e675c;
+    --warm:#a3825f;
+    --warm-soft:#c9b39a;
+    --line:rgba(63,58,51,.16);
+    --serif:"Noto Serif SC","Songti SC","STSong",serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;overflow:hidden;background:var(--paper-deep);}
+  body{font-family:var(--serif);color:var(--ink);display:flex;justify-content:center;-webkit-font-smoothing:antialiased;}
+  #stage{
+    position:relative;width:100%;max-width:480px;height:100%;
+    background:var(--paper);overflow:hidden;
+    box-shadow:0 0 60px rgba(63,58,51,.18);
+  }
+  #grain{
+    position:absolute;inset:0;z-index:60;pointer-events:none;opacity:.5;mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.42 0 0 0 0 0.38 0 0 0 0 0.32 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  #vignette{position:absolute;inset:0;z-index:55;pointer-events:none;
+    background:radial-gradient(ellipse 120% 90% at 50% 45%, transparent 55%, rgba(120,104,80,.14) 100%);}
+
+  /* ── 页面栈 ── */
+  .page{
+    position:absolute;inset:0;display:flex;flex-direction:column;
+    padding:52px 26px 78px;
+    opacity:0;visibility:hidden;transform:translateY(22px);
+    transition:opacity .8s ease, transform .8s ease, visibility 0s .8s;
+    overflow:hidden;
+  }
+  .page.active{opacity:1;visibility:visible;transform:translateY(0);transition:opacity .8s ease .15s, transform .8s ease .15s;}
+
+  .rise{opacity:0;transform:translateY(14px);transition:opacity 1s ease, transform 1s ease;transition-delay:var(--d,0s);}
+  .page.active .rise{opacity:1;transform:translateY(0);}
+
+  /* ── 眨眼转场 ── */
+  #blink{position:absolute;inset:0;z-index:80;pointer-events:none;}
+  #blink .lid{position:absolute;left:0;width:100%;height:50.5%;background:var(--paper);
+    transition:transform .68s cubic-bezier(.65,0,.35,1);}
+  #blink .top{top:0;transform:translateY(-101%);}
+  #blink .bot{bottom:0;transform:translateY(101%);}
+  #blink .lash{position:absolute;top:50%;left:50%;width:0;height:2px;transform:translate(-50%,-50%);
+    background:linear-gradient(90deg,transparent,var(--warm-soft),transparent);
+    transition:width .68s cubic-bezier(.65,0,.35,1);opacity:.9;}
+  #blink.closing .top{transform:translateY(0);}
+  #blink.closing .bot{transform:translateY(0);}
+  #blink.closing .lash{width:76%;}
+
+  /* ── 进度 ── */
+  #dots{position:absolute;right:10px;top:50%;transform:translateY(-50%);z-index:70;display:flex;flex-direction:column;gap:8px;align-items:center;}
+  #dots i{width:4px;height:4px;border-radius:50%;background:rgba(63,58,51,.22);transition:all .5s;cursor:pointer;}
+  #dots i.on{background:var(--warm);height:14px;border-radius:3px;}
+  #pagenum{position:absolute;bottom:22px;left:0;width:100%;z-index:70;text-align:center;font-size:10.5px;letter-spacing:.35em;color:var(--ink-soft);opacity:.7;}
+  #hint{position:absolute;bottom:40px;left:0;width:100%;z-index:70;text-align:center;font-size:10px;letter-spacing:.4em;color:var(--warm);opacity:0;animation:hintFloat 2.6s ease-in-out infinite;}
+  #hint.show{opacity:.85;}
+  @keyframes hintFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
+
+  /* ═══ 封面 ═══ */
+  #p-cover{justify-content:center;align-items:center;text-align:center;cursor:pointer;}
+  .cover-bg{position:absolute;inset:0;overflow:hidden;pointer-events:none;}
+  .cover-bg img{width:100%;height:100%;object-fit:cover;display:block;opacity:.4;filter:saturate(.88) contrast(.97);
+    -webkit-mask-image:radial-gradient(ellipse 66% 54% at 50% 45%, #000 34%, rgba(0,0,0,.4) 60%, transparent 82%);
+    mask-image:radial-gradient(ellipse 66% 54% at 50% 45%, #000 34%, rgba(0,0,0,.4) 60%, transparent 82%);}
+  .page.active .cover-bg img{animation:coverZoom 24s ease-in-out infinite alternate;}
+  @keyframes coverZoom{0%{transform:scale(1.04)}100%{transform:scale(1.16)}}
+  #coverEyeWrap{position:relative;width:236px;height:168px;cursor:pointer;z-index:2;}
+  #coverEyeWrap svg{width:100%;height:100%;overflow:visible;}
+  .iris-glow{animation:glowPulse 4.5s ease-in-out infinite;transform-origin:center;}
+  @keyframes glowPulse{0%,100%{opacity:.5;transform:scale(.94)}50%{opacity:1;transform:scale(1.06)}}
+  .eye-lid-anim{animation:lidBreath 7s ease-in-out infinite;transform-origin:center;}
+  @keyframes lidBreath{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.88)}}
+  #coverTitle{margin-top:36px;position:relative;z-index:2;}
+  #coverTitle h1{font-size:31px;font-weight:600;letter-spacing:.13em;line-height:1.45;}
+  #coverTitle h1 span{display:block;font-size:14px;font-weight:400;letter-spacing:.5em;color:var(--warm);margin-bottom:12px;}
+  #coverSub{margin-top:16px;font-size:11px;letter-spacing:.28em;color:var(--ink-soft);line-height:2;}
+  #coverMeta{margin-top:14px;font-size:9.5px;letter-spacing:.34em;color:var(--warm);opacity:.8;}
+  #coverTouch{margin-top:26px;font-size:10.5px;letter-spacing:.44em;color:var(--warm);opacity:0;transition:opacity 1.4s ease .2s;position:relative;z-index:2;}
+  .entered #coverTouch{opacity:.9;}
+  #coverEyeWrap .ring{animation:ringScale 6s ease-in-out infinite;transform-origin:center;}
+  @keyframes ringScale{0%,100%{transform:scale(1);opacity:.4}50%{transform:scale(1.08);opacity:.75}}
+  .cover-snap{position:absolute;left:10px;bottom:88px;width:84px;margin:0;transform:rotate(-5.5deg);z-index:2;
+    background:var(--cream);padding:5px 5px 4px;box-shadow:0 8px 18px rgba(63,58,51,.2);}
+  .cover-snap img{display:block;width:100%;height:96px;object-fit:cover;filter:saturate(.85);}
+  .cover-snap figcaption{font-size:7.5px;letter-spacing:.22em;color:var(--ink-soft);text-align:center;padding-top:3px;}
+
+  /* ═══ 引语页 ═══ */
+  #p-quote{justify-content:center;position:relative;}
+  #p-quote blockquote{font-size:18.5px;line-height:2.4;letter-spacing:.11em;color:var(--ink);text-align:left;padding-left:2px;}
+  #p-quote blockquote em{font-style:normal;color:var(--warm);}
+  #p-quote .quote-mark{font-size:64px;color:var(--warm-soft);opacity:.5;line-height:.8;margin-bottom:6px;margin-left:-4px;}
+  #p-quote .attrib{margin-top:18px;font-size:10px;letter-spacing:.4em;color:var(--ink-soft);}
+  .corner-eye{position:absolute;width:110px;height:58px;opacity:.26;}
+  .q-strip{position:relative;height:150px;margin-top:26px;}
+  .q-strip figure{position:absolute;margin:0;background:var(--cream);padding:5px;box-shadow:0 8px 18px rgba(63,58,51,.18);}
+  .q-strip img{display:block;width:100%;height:100%;object-fit:cover;filter:saturate(.85) contrast(.98);}
+  .q-strip .s1{left:0;top:14px;width:84px;height:112px;transform:rotate(-4deg);z-index:1;}
+  .q-strip .s2{left:78px;top:0;width:96px;height:132px;transform:rotate(2.4deg);z-index:2;}
+  .q-strip .s3{left:170px;top:18px;width:82px;height:108px;transform:rotate(-2deg);z-index:1;}
+  .q-strip .s1 img,.q-strip .s2 img,.q-strip .s3 img{height:calc(100% - 0px);}
+
+  /* ═══ 人物页：错位拼贴 ═══ */
+  .person{justify-content:flex-start;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+  .person::-webkit-scrollbar{display:none;}
+  .person > *{flex-shrink:0;}
+  .stamp{position:absolute;top:8px;right:12px;font-size:78px;letter-spacing:-.04em;color:var(--warm);opacity:.11;line-height:1;pointer-events:none;}
+  .kicker{display:flex;align-items:center;gap:9px;font-size:10px;letter-spacing:.36em;color:var(--warm);margin-bottom:12px;}
+  .kicker::before{content:"";width:22px;height:1px;background:var(--warm-soft);}
+  .kicker .idx{color:var(--ink-soft);letter-spacing:.1em;}
+  .person h2{font-size:23px;font-weight:600;letter-spacing:.07em;line-height:1.5;margin-bottom:5px;padding-left:2px;}
+  .person h2 em{font-style:normal;font-size:1.3em;color:var(--warm);letter-spacing:0;}
+  .dateline{font-size:10px;letter-spacing:.22em;color:var(--ink-soft);margin-bottom:8px;padding-left:2px;opacity:.9;}
+
+  .collage{position:relative;height:398px;margin:10px -4px 6px;}
+  .ph{position:absolute;margin:0;}
+  .ph .frame{display:block;background:var(--cream);padding:5px;position:relative;box-shadow:0 10px 24px rgba(63,58,51,.18);}
+  .ph .frame::before{content:"";position:absolute;top:-8px;left:18px;width:52px;height:15px;background:rgba(201,179,154,.5);transform:rotate(-3.5deg);box-shadow:0 1px 2px rgba(63,58,51,.06);}
+  .ph img{display:block;width:100%;object-fit:cover;filter:saturate(.9) contrast(.97);}
+  .ph .cap{display:block;position:absolute;left:0;bottom:-15px;font-size:8px;letter-spacing:.16em;color:var(--ink-soft);font-style:normal;}
+  .hot-chip{position:absolute;cursor:pointer;background:var(--cream);padding:4px 4px 0;box-shadow:0 6px 14px rgba(63,58,51,.2);
+    transition:transform .35s cubic-bezier(.34,1.56,.64,1), box-shadow .3s;z-index:4;}
+  .hot-chip img{display:block;width:100%;object-fit:cover;filter:saturate(.9);}
+  .hot-chip span{display:block;text-align:center;font-size:9px;letter-spacing:.16em;color:var(--ink);padding:5px 0 4px;white-space:nowrap;}
+  .hot-chip b{position:absolute;top:-7px;right:-7px;width:19px;height:19px;border-radius:50%;background:var(--warm);color:var(--cream);
+    font-size:12px;font-weight:400;line-height:19px;text-align:center;box-shadow:0 2px 6px rgba(63,58,51,.28);}
+  .hot-chip:active{transform:scale(.92) rotate(0deg)!important;}
+  .hot-chip.viewed{filter:saturate(.55) brightness(1.02);box-shadow:0 3px 8px rgba(63,58,51,.12);}
+  .hot-chip.viewed b{background:var(--warm-soft);font-size:10px;}
+  .mnote{position:absolute;right:-8px;top:120px;writing-mode:vertical-rl;font-size:8.5px;letter-spacing:.42em;color:var(--warm);opacity:.55;}
+  .lead{font-size:13.5px;line-height:2.05;letter-spacing:.05em;color:var(--ink);margin-top:12px;text-align:justify;}
+  .mono{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:15px;line-height:1.95;letter-spacing:.07em;color:var(--ink);}
+  .mono::before{content:"「";color:var(--warm-soft);}
+  .mono::after{content:"」";color:var(--warm-soft);}
+
+  /* ═══ 汇聚页 ═══ */
+  #p-gather{justify-content:center;align-items:center;text-align:center;}
+  .gather-bg{position:absolute;inset:0;overflow:hidden;pointer-events:none;}
+  .gather-bg img{width:100%;height:100%;object-fit:cover;display:block;opacity:.28;filter:saturate(.85);
+    -webkit-mask-image:radial-gradient(ellipse 70% 58% at 50% 48%, #000 30%, rgba(0,0,0,.35) 58%, transparent 84%);
+    mask-image:radial-gradient(ellipse 70% 58% at 50% 48%, #000 30%, rgba(0,0,0,.35) 58%, transparent 84%);}
+  .page.active .gather-bg img{animation:coverZoom 28s ease-in-out infinite alternate-reverse;}
+  #gatherStage{position:relative;width:320px;height:340px;margin:0 auto;z-index:1;}
+  .g-eye{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);}
+  .g-eye svg{width:104px;height:66px;overflow:visible;}
+  .page.active .g-eye svg{animation:gFade 5s ease-in-out infinite alternate;}
+  @keyframes gFade{0%{opacity:.45;filter:blur(1px)}100%{opacity:.9;filter:blur(0px)}}
+  .g-portrait{position:absolute;border-radius:50%;overflow:hidden;cursor:pointer;border:1px solid var(--warm-soft);
+    box-shadow:0 8px 20px rgba(63,58,51,.22);opacity:0;transform:scale(.55);
+    transition:transform .7s cubic-bezier(.34,1.56,.64,1), opacity .6s;background:var(--cream);padding:4px;}
+  .page.active .g-portrait{opacity:1;transform:scale(1) rotate(var(--rot,0deg));transition-delay:var(--d);}
+  .g-portrait img{width:100%;height:100%;object-fit:cover;border-radius:50%;filter:saturate(.88);}
+  .g-portrait span{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:9px;letter-spacing:.24em;color:var(--ink-soft);white-space:nowrap;}
+  .g-portrait:active{transform:scale(.94) rotate(var(--rot,0deg))!important;}
+  #gatherTitle{margin-top:44px;font-size:12.5px;letter-spacing:.46em;color:var(--warm);z-index:1;position:relative;}
+  #seenLine{margin-top:12px;font-size:11px;letter-spacing:.24em;color:var(--ink-soft);z-index:1;position:relative;}
+  #seenLine b{color:var(--warm);font-weight:600;font-size:14px;}
+  #gatherSub{margin-top:10px;font-size:11px;line-height:2;letter-spacing:.16em;color:var(--ink-soft);opacity:.85;z-index:1;position:relative;}
+
+  /* ═══ 收尾页 ═══ */
+  #p-end{justify-content:center;align-items:center;text-align:center;}
+  #endEye svg{width:196px;height:118px;overflow:visible;}
+  .page.active #endEye svg{animation:vanish 6s ease-in-out forwards;}
+  @keyframes vanish{0%{opacity:1;filter:blur(0)}55%{opacity:.6;filter:blur(1.5px)}100%{opacity:.12;filter:blur(6px)}}
+  #endText{margin-top:16px;}
+  #endText .e-main{font-size:18.5px;line-height:2.35;letter-spacing:.13em;color:var(--ink);}
+  #endText .e-main em{font-style:normal;color:var(--warm);}
+  #endText .e-sign{margin-top:30px;font-size:10px;letter-spacing:.38em;color:var(--ink-soft);line-height:2.2;}
+  #restart{margin-top:36px;padding:11px 32px;border:1px solid var(--warm-soft);border-radius:999px;background:none;
+    color:var(--warm);font-family:var(--serif);font-size:11.5px;letter-spacing:.38em;cursor:pointer;transition:all .4s;}
+  #restart:hover{background:var(--warm);color:var(--paper);}
+
+  /* ═══ 眼眸弹出层 ═══ */
+  #peek{position:absolute;inset:0;z-index:78;display:none;align-items:center;justify-content:center;
+    padding:34px 24px 80px;background:rgba(43,38,32,.54);-webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);}
+  #peek.open{display:flex;}
+  #peek .panel{position:relative;width:100%;max-width:390px;max-height:100%;overflow-y:auto;
+    background:var(--paper);border-radius:16px;padding:18px 20px 22px;box-shadow:0 22px 60px rgba(28,24,18,.42);
+    clip-path:circle(0% at 50% 52%);transition:clip-path .8s cubic-bezier(.6,0,.2,1);}
+  #peek .panel::-webkit-scrollbar{display:none;}
+  #peek.show .panel{clip-path:circle(78% at 50% 52%);}
+  #peek .close{position:absolute;top:12px;right:12px;z-index:3;width:29px;height:29px;border-radius:50%;
+    border:1px solid var(--line);background:rgba(244,239,230,.92);color:var(--ink-soft);font-size:14px;line-height:1;cursor:pointer;font-family:var(--serif);}
+  #peek .p-kicker{font-size:8.5px;letter-spacing:.4em;color:var(--warm);margin-bottom:10px;}
+  #peek .p-img{width:100%;height:214px;border-radius:10px;overflow:hidden;background:var(--cream);padding:4px;}
+  #peek .p-img img{width:100%;height:100%;object-fit:cover;filter:saturate(.92);}
+  #peek h3{font-size:17.5px;letter-spacing:.1em;margin:12px 0 8px;font-weight:600;}
+  #peek .p-body p{font-size:12.8px;line-height:2;letter-spacing:.03em;text-align:justify;color:var(--ink);margin-bottom:8px;}
+  #peek .p-quote{font-size:12.5px;line-height:1.9;color:var(--ink-soft);border-top:1px solid var(--line);padding-top:10px;margin-top:2px;letter-spacing:.05em;}
+  #peek .p-quote::before{content:"「";color:var(--warm-soft);}
+  #peek .p-quote::after{content:"」";color:var(--warm-soft);}
+
+  @media (min-width:520px){
+    #stage{border-radius:20px;height:min(100%,880px);margin:auto;}
+    body{align-items:center;}
+  }
+</style>
+</head>
+<body>
+<div id="stage">
+
+  <div id="blink"><div class="lid top"></div><div class="lid bot"></div><div class="lash"></div></div>
+
+  <!-- 1 封面 -->
+  <section class="page" id="p-cover">
+    <div class="cover-bg"><img src="img/eye-01-cover.png" alt="朦胧校园走廊"></div>
+    <figure class="cover-snap"><img src="img/eye-s03-corridor.png" alt="夜里的楼道"><figcaption>角落 01</figcaption></figure>
+    <div id="coverEyeWrap" class="rise" style="--d:.2s">
+      <svg viewBox="0 0 240 170">
+        <defs>
+          <radialGradient id="irisG" cx="50%" cy="45%" r="55%">
+            <stop offset="0%" stop-color="#e8d9c2"/><stop offset="45%" stop-color="#c9b39a"/>
+            <stop offset="80%" stop-color="#a3825f"/><stop offset="100%" stop-color="#8a6c4e"/>
+          </radialGradient>
+          <radialGradient id="pupilG" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#3f3a33"/><stop offset="70%" stop-color="#4a4238"/><stop offset="100%" stop-color="#3f3a33"/>
+          </radialGradient>
+          <radialGradient id="haloG" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="rgba(201,179,154,.55)"/><stop offset="60%" stop-color="rgba(201,179,154,.18)"/><stop offset="100%" stop-color="rgba(201,179,154,0)"/>
+          </radialGradient>
+          <filter id="soft"><feGaussianBlur stdDeviation="2.2"/></filter>
+        </defs>
+        <circle class="iris-glow" cx="120" cy="85" r="80" fill="url(#haloG)"/>
+        <circle class="iris-glow" cx="120" cy="85" r="46" fill="url(#haloG)"/>
+        <g class="eye-lid-anim">
+          <path d="M28 85 Q120 18 212 85 Q120 152 28 85 Z" fill="none" stroke="#a3825f" stroke-width="1.4" opacity=".7" filter="url(#soft)"/>
+          <path d="M40 85 Q120 26 200 85 Q120 144 40 85 Z" fill="none" stroke="#c9b39a" stroke-width="1" opacity=".5"/>
+          <circle cx="120" cy="85" r="40" fill="url(#irisG)" opacity=".92"/>
+          <circle cx="120" cy="85" r="17" fill="url(#pupilG)"/>
+          <circle cx="106" cy="72" r="6" fill="#f4efe6" opacity=".55" filter="url(#soft)"/>
+          <circle class="ring" cx="120" cy="85" r="52" fill="none" stroke="#c9b39a" stroke-width=".8" stroke-dasharray="3 7" opacity=".45"/>
+        </g>
+      </svg>
+    </div>
+    <div id="coverTitle">
+      <div class="rise" style="--d:.8s"><h1><span>新闻纪实专题</span>暗处的眼</h1></div>
+      <div class="rise" style="--d:1.3s"><p id="coverSub">校园未被看见的守护者</p></div>
+      <div class="rise" style="--d:1.6s"><p id="coverMeta">五 个 人 · 十 个 角 落 · 一 双 眼 睛</p></div>
+    </div>
+    <div class="rise" style="--d:2s"><p id="coverTouch">轻 触 眼 眸 · 开 始 看 见</p></div>
+  </section>
+
+  <!-- 2 引语 -->
+  <section class="page" id="p-quote">
+    <svg class="eye-orn corner-eye" style="top:64px;left:20px" viewBox="0 0 120 64">
+      <path d="M8 32 Q60 2 112 32 Q60 62 8 32 Z" fill="none" stroke="#a3825f" stroke-width="1.2"/>
+      <circle cx="60" cy="32" r="11" fill="none" stroke="#c9b39a" stroke-width="1"/>
+    </svg>
+    <div class="quote-mark rise" style="--d:.3s">“</div>
+    <blockquote class="rise" style="--d:.6s">我们行走在校园，<br>总有一双<em>安静的眼</em>，<br>看见那些藏在<br>视线盲区里的劳动。</blockquote>
+    <div class="q-strip rise" style="--d:1.2s">
+      <figure class="s1"><img src="img/eye-s02-traybelt.png" alt="回收餐盘"></figure>
+      <figure class="s2"><img src="img/eye-s04-wetpath.png" alt="雨后小路"></figure>
+      <figure class="s3"><img src="img/eye-s07-toolwall.png" alt="工具墙"></figure>
+    </div>
+    <div class="attrib rise" style="--d:1.7s">—— 本 期 手 记</div>
+  </section>
+
+  <!-- 3 食堂阿姨 -->
+  <section class="page person" id="p-canteen">
+    <div class="stamp">01</div>
+    <div class="kicker rise" style="--d:.2s"><span class="idx">人物 · 之一</span>食 堂 阿 姨</div>
+    <h2 class="rise" style="--d:.35s">最后一个<em>擦台面</em>的人</h2>
+    <div class="dateline rise" style="--d:.45s">午后一时 · 第一食堂</div>
+    <div class="collage rise" style="--d:.55s">
+      <figure class="ph" style="left:0;top:0;width:70%;transform:rotate(-2deg);z-index:2">
+        <span class="frame"><img src="img/eye-02-canteen.png" alt="食堂阿姨擦桌" style="height:286px"></span>
+        <i class="cap">午 市 散 去 · 12:50</i>
+      </figure>
+      <figure class="ph" style="right:-2%;top:24px;width:36%;transform:rotate(3.4deg);z-index:1">
+        <span class="frame"><img src="img/eye-s01-counter.png" alt="空档口" style="height:126px"></span>
+      </figure>
+      <div class="hot-chip" data-peek="h1" style="left:4%;bottom:0;width:27%;transform:rotate(-4.5deg)">
+        <img src="img/eye-h01-canteen-cardboard.png" alt="桌脚下的硬纸板" style="height:88px"><span>桌 脚</span><b>+</b>
+      </div>
+      <div class="hot-chip" data-peek="h2" style="left:36%;bottom:-8px;width:27%;transform:rotate(2.6deg)">
+        <img src="img/eye-h02-canteen-washroom.png" alt="洗碗间" style="height:88px"><span>洗 碗 间</span><b>+</b>
+      </div>
+    </div>
+    <p class="lead rise" style="--d:1.4s">十二点五十分，最后一拨人离席。她擦一张桌子要两遍：一遍去油，一遍收水。</p>
+    <p class="mono rise" style="--d:1.9s">孩子们吃得快，我就得擦得慢一点。</p>
+  </section>
+
+  <!-- 4 宿管 -->
+  <section class="page person" id="p-dorm">
+    <div class="stamp">02</div>
+    <div class="kicker rise" style="--d:.2s"><span class="idx">人物 · 之二</span>宿 管</div>
+    <h2 class="rise" style="--d:.35s">整栋楼睡了，<em>她</em>醒着</h2>
+    <div class="dateline rise" style="--d:.45s">夜里十一点半 · 六号楼</div>
+    <div class="collage rise" style="--d:.55s">
+      <figure class="ph" style="right:0;top:6px;width:68%;transform:rotate(1.8deg);z-index:2">
+        <span class="frame"><img src="img/eye-03-dorm.png" alt="宿管巡查" style="height:290px"></span>
+        <i class="cap">三 楼 转 角 · 23:40</i>
+      </figure>
+      <figure class="ph" style="left:0;top:30px;width:38%;transform:rotate(-3.2deg);z-index:1">
+        <span class="frame"><img src="img/eye-s03-corridor.png" alt="夜里的走廊" style="height:130px"></span>
+      </figure>
+      <div class="hot-chip" data-peek="h3" style="right:4%;bottom:2px;width:26%;transform:rotate(3.2deg)">
+        <img src="img/eye-h03-dorm-lamp.png" alt="门灯" style="height:86px"><span>门 灯</span><b>+</b>
+      </div>
+      <div class="hot-chip" data-peek="h4" style="left:26%;bottom:-10px;width:26%;transform:rotate(-2.4deg)">
+        <img src="img/eye-h04-dorm-notebook.png" alt="笔记本" style="height:86px"><span>笔 记 本</span><b>+</b>
+      </div>
+    </div>
+    <p class="lead rise" style="--d:1.4s">熄灯铃响过，她提着灯从一楼往上走。看插销，看窗，看谁还没回。</p>
+    <p class="mono rise" style="--d:1.9s">整栋楼睡了，我替他们醒着。</p>
+  </section>
+
+  <!-- 5 保洁 -->
+  <section class="page person" id="p-clean">
+    <div class="stamp">03</div>
+    <div class="kicker rise" style="--d:.2s"><span class="idx">人物 · 之三</span>校 园 保 洁</div>
+    <h2 class="rise" style="--d:.35s"><em>六点钟</em>的路</h2>
+    <div class="dateline rise" style="--d:.45s">清晨五点五十 · 图书馆前</div>
+    <div class="collage rise" style="--d:.55s">
+      <figure class="ph" style="left:0;top:4px;width:66%;transform:rotate(-1.4deg);z-index:2">
+        <span class="frame"><img src="img/eye-04-clean.png" alt="清晨清扫" style="height:284px"></span>
+        <i class="cap">主 路 · 05:50</i>
+      </figure>
+      <figure class="ph" style="right:-3%;top:38px;width:40%;transform:rotate(2.6deg);z-index:1">
+        <span class="frame"><img src="img/eye-s04-wetpath.png" alt="雨后小路" style="height:128px"></span>
+      </figure>
+      <div class="hot-chip" data-peek="h5" style="left:8%;bottom:2px;width:27%;transform:rotate(3deg)">
+        <img src="img/eye-h05-clean-grate.png" alt="铁篦子" style="height:86px"><span>铁 篦 子</span><b>+</b>
+      </div>
+      <div class="hot-chip" data-peek="h6" style="left:40%;bottom:-8px;width:26%;transform:rotate(-3.4deg)">
+        <img src="img/eye-h06-clean-leaves.png" alt="落叶" style="height:86px"><span>落 叶</span><b>+</b>
+      </div>
+    </div>
+    <p class="lead rise" style="--d:1.4s">五点五十，天刚泛灰。他要赶在七点二十之前，把这条路扫完。</p>
+    <p class="mono rise" style="--d:1.9s">路干净了，孩子们的早晨就顺了。</p>
+  </section>
+
+  <!-- 6 保安 -->
+  <section class="page person" id="p-guard">
+    <div class="stamp">04</div>
+    <div class="kicker rise" style="--d:.2s"><span class="idx">人物 · 之四</span>校 园 保 安</div>
+    <h2 class="rise" style="--d:.35s">门内，<em>门外</em></h2>
+    <div class="dateline rise" style="--d:.45s">黄昏六点二十 · 南门</div>
+    <div class="collage rise" style="--d:.55s">
+      <figure class="ph" style="right:2%;top:2px;width:64%;transform:rotate(2.4deg);z-index:2">
+        <span class="frame"><img src="img/eye-05-guard.png" alt="保安值守" style="height:282px"></span>
+        <i class="cap">晚 高 峰 · 18:20</i>
+      </figure>
+      <figure class="ph" style="left:0;top:26px;width:40%;transform:rotate(-2.8deg);z-index:1">
+        <span class="frame"><img src="img/eye-s05-bikeshed.png" alt="车棚" style="height:124px"></span>
+      </figure>
+      <div class="hot-chip" data-peek="h7" style="right:2%;bottom:2px;width:26%;transform:rotate(-3deg)">
+        <img src="img/eye-h07-guard-logbook.png" alt="登记本" style="height:86px"><span>登 记 本</span><b>+</b>
+      </div>
+      <div class="hot-chip" data-peek="h8" style="left:22%;bottom:-10px;width:26%;transform:rotate(3.6deg)">
+        <img src="img/eye-h08-guard-drawer.png" alt="失物抽屉" style="height:86px"><span>抽 屉</span><b>+</b>
+      </div>
+    </div>
+    <p class="lead rise" style="--d:1.4s">一小时几十次抬手：放行，拦下。夜里巡逻，手电在死角多停两秒。</p>
+    <p class="mono rise" style="--d:1.9s">校门小，责任大。我不多话，我看着就行。</p>
+  </section>
+
+  <!-- 7 维修师傅 -->
+  <section class="page person" id="p-repair">
+    <div class="stamp">05</div>
+    <div class="kicker rise" style="--d:.2s"><span class="idx">人物 · 之五</span>后 勤 维 修</div>
+    <h2 class="rise" style="--d:.35s">响一声，<em>就到</em></h2>
+    <div class="dateline rise" style="--d:.45s">午后三点 · 第三教学楼</div>
+    <div class="collage rise" style="--d:.55s">
+      <figure class="ph" style="left:2%;top:0;width:72%;transform:rotate(-2.6deg);z-index:2">
+        <span class="frame"><img src="img/eye-06-repair.png" alt="维修师傅检修" style="height:292px"></span>
+        <i class="cap">三 〇 七 教 室 · 15:10</i>
+      </figure>
+      <figure class="ph" style="right:-2%;top:44px;width:34%;transform:rotate(4deg);z-index:1">
+        <span class="frame"><img src="img/eye-s06-classroom.png" alt="空教室" style="height:122px"></span>
+      </figure>
+      <div class="hot-chip" data-peek="h9" style="left:2%;bottom:0;width:26%;transform:rotate(2.8deg)">
+        <img src="img/eye-h09-repair-toolbag.png" alt="工具包" style="height:86px"><span>工 具 包</span><b>+</b>
+      </div>
+      <div class="hot-chip" data-peek="h10" style="left:34%;bottom:-8px;width:27%;transform:rotate(-3.8deg)">
+        <img src="img/eye-h10-repair-rubber.png" alt="橡胶套" style="height:86px"><span>橡 胶 套</span><b>+</b>
+      </div>
+    </div>
+    <p class="lead rise" style="--d:1.4s">报修单跳出来：307，灯管频闪。他爬上梯子，先断电，再一寸寸排。</p>
+    <p class="mono rise" style="--d:1.9s">东西坏了能修。别拖，拖了就耽误人。</p>
+  </section>
+
+  <!-- 8 汇聚 -->
+  <section class="page" id="p-gather">
+    <div class="gather-bg"><img src="img/eye-07-gather.png" alt="五组身影环绕微光眼眸"></div>
+    <div id="gatherStage">
+      <div class="g-eye rise" style="--d:.2s">
+        <svg viewBox="0 0 120 76">
+          <circle cx="60" cy="38" r="34" fill="rgba(201,179,154,.28)"/>
+          <path d="M12 38 Q60 6 108 38 Q60 70 12 38 Z" fill="none" stroke="#a3825f" stroke-width="1.3" opacity=".8"/>
+          <circle cx="60" cy="38" r="16" fill="#c9b39a" opacity=".8"/>
+          <circle cx="60" cy="38" r="7" fill="#3f3a33" opacity=".85"/>
+          <circle cx="54" cy="32" r="2.6" fill="#f4efe6" opacity=".7"/>
+        </svg>
+      </div>
+      <div class="g-portrait" style="--d:.5s;--rot:-3deg;top:4px;left:116px;width:78px;height:78px" data-go="p-canteen"><img src="img/eye-02-canteen.png" alt="食堂阿姨"><span>食堂阿姨</span></div>
+      <div class="g-portrait" style="--d:.65s;--rot:2.4deg;top:86px;left:6px;width:92px;height:92px" data-go="p-dorm"><img src="img/eye-s03-corridor.png" alt="宿管"><span>宿管</span></div>
+      <div class="g-portrait" style="--d:.8s;--rot:-2deg;top:78px;left:214px;width:84px;height:84px" data-go="p-clean"><img src="img/eye-04-clean.png" alt="校园保洁"><span>校园保洁</span></div>
+      <div class="g-portrait" style="--d:.95s;--rot:3deg;top:196px;left:52px;width:80px;height:80px" data-go="p-guard"><img src="img/eye-05-guard.png" alt="校园保安"><span>校园保安</span></div>
+      <div class="g-portrait" style="--d:1.1s;--rot:-3.6deg;top:190px;left:186px;width:96px;height:96px" data-go="p-repair"><img src="img/eye-06-repair.png" alt="维修师傅"><span>维修师傅</span></div>
+    </div>
+    <div id="gatherTitle" class="rise" style="--d:1.4s">五 双 手 · 一 双 眼</div>
+    <div id="seenLine" class="rise" style="--d:1.6s">你 已 看 见 <b id="seenCount">0</b> / 10 个角落</div>
+    <p id="gatherSub" class="rise" style="--d:1.8s">轻触人像回到他的故事。没点开的方块，还在等。</p>
+  </section>
+
+  <!-- 9 收尾 -->
+  <section class="page" id="p-end">
+    <div id="endEye" class="rise" style="--d:.2s">
+      <svg viewBox="0 0 200 120">
+        <circle cx="100" cy="60" r="46" fill="rgba(201,179,154,.3)"/>
+        <path d="M24 60 Q100 14 176 60 Q100 106 24 60 Z" fill="none" stroke="#a3825f" stroke-width="1.4" opacity=".85"/>
+        <circle cx="100" cy="60" r="22" fill="#c9b39a" opacity=".8"/>
+        <circle cx="100" cy="60" r="10" fill="#3f3a33" opacity=".85"/>
+        <circle cx="92" cy="52" r="3.4" fill="#f4efe6" opacity=".7"/>
+      </svg>
+    </div>
+    <div id="endText">
+      <p class="e-main rise" style="--d:1.1s">这不是监视，<br>是<em>看见</em>。<br>看见每一份不起眼的付出。</p>
+      <p class="e-sign rise" style="--d:2.1s">暗 处 的 眼 · 新 闻 纪 实 专 题<br>采 写 · 摄 影 ／ 观 察 之 眼</p>
+      <button id="restart" class="rise" style="--d:2.8s">再 看 一 遍</button>
+    </div>
+  </section>
+
+  <!-- 眼眸弹出层 -->
+  <div id="peek">
+    <div class="panel">
+      <button class="close" id="peekClose" aria-label="关闭">×</button>
+      <div class="p-kicker" id="peekKicker"></div>
+      <div class="p-img"><img id="peekImg" alt="背后故事"></div>
+      <h3 id="peekTitle"></h3>
+      <div class="p-body" id="peekBody"></div>
+      <div class="p-quote" id="peekQuote"></div>
+    </div>
+  </div>
+
+  <div id="dots"></div>
+  <div id="pagenum">01 ／ 09</div>
+  <div id="hint">上 滑 翻 页</div>
+  <div id="vignette"></div>
+  <div id="grain"></div>
+</div>
+
+<script>
+(function(){
+  var stage = document.getElementById('stage');
+  var pages = Array.prototype.slice.call(document.querySelectorAll('.page'));
+  var blink = document.getElementById('blink');
+  var dots = document.getElementById('dots');
+  var pagenum = document.getElementById('pagenum');
+  var hint = document.getElementById('hint');
+  var cur = 0, busy = false;
+
+  pages.forEach(function(_, i){
+    var d = document.createElement('i');
+    d.addEventListener('click', function(){ if(i!==cur) go(i); });
+    dots.appendChild(d);
+  });
+  var dotEls = Array.prototype.slice.call(dots.children);
+
+  function pad(n){ return n<10 ? '0'+n : ''+n; }
+  function render(){
+    pages.forEach(function(p,i){ p.classList.toggle('active', i===cur); });
+    dotEls.forEach(function(d,i){ d.classList.toggle('on', i===cur); });
+    pagenum.textContent = pad(cur+1)+' ／ '+pad(pages.length);
+    hint.classList.toggle('show', cur===0 && !stage.classList.contains('entered'));
+  }
+
+  function go(n){
+    if(busy || n<0 || n>=pages.length || n===cur) return;
+    busy = true;
+    blink.classList.add('closing');
+    setTimeout(function(){
+      cur = n;
+      render();
+      setTimeout(function(){
+        blink.classList.remove('closing');
+        setTimeout(function(){ busy = false; }, 700);
+      }, 160);
+    }, 700);
+  }
+  function next(){ go(cur+1); }
+  function prev(){ go(cur-1); }
+
+  var ty = null;
+  stage.addEventListener('touchstart', function(e){ ty = e.touches[0].clientY; }, {passive:true});
+  stage.addEventListener('touchend', function(e){
+    if(ty===null) return;
+    var dy = e.changedTouches[0].clientY - ty;
+    if(Math.abs(dy) > 46 && !peekOpen()){
+      var pg = pages[cur];
+      if(pg.classList.contains('person')){
+        var scrollable = pg.scrollHeight > pg.clientHeight + 6;
+        if(scrollable){
+          if(dy < 0 && pg.scrollTop + pg.clientHeight < pg.scrollHeight - 8){ ty=null; return; }
+          if(dy > 0 && pg.scrollTop > 8){ ty=null; return; }
+        }
+      }
+      dy<0 ? next() : prev();
+    }
+    ty = null;
+  }, {passive:true});
+
+  var wheelLock = false;
+  window.addEventListener('wheel', function(e){
+    if(wheelLock || peekOpen()) return;
+    if(Math.abs(e.deltaY) < 18) return;
+    var pg = pages[cur];
+    if(pg.classList.contains('person') && pg.scrollHeight > pg.clientHeight + 6){
+      if(e.deltaY > 0 && pg.scrollTop + pg.clientHeight < pg.scrollHeight - 8) return;
+      if(e.deltaY < 0 && pg.scrollTop > 8) return;
+    }
+    wheelLock = true;
+    setTimeout(function(){ wheelLock=false; }, 900);
+    e.deltaY > 0 ? next() : prev();
+  }, {passive:true});
+
+  window.addEventListener('keydown', function(e){
+    if(e.key==='ArrowDown'||e.key==='PageDown'||e.key===' ') next();
+    if(e.key==='ArrowUp'||e.key==='PageUp') prev();
+    if(e.key==='Home') go(0);
+    if(e.key==='End') go(pages.length-1);
+    if(e.key==='Escape') closePeek();
+  });
+
+  document.getElementById('coverEyeWrap').addEventListener('click', function(){
+    stage.classList.add('entered'); go(1);
+  });
+  document.getElementById('p-cover').addEventListener('click', function(e){
+    if(cur!==0) return;
+    stage.classList.add('entered'); go(1);
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll('.g-portrait'), function(el){
+    el.addEventListener('click', function(e){
+      e.stopPropagation();
+      go(pages.indexOf(document.getElementById(el.getAttribute('data-go'))));
+    });
+  });
+
+  document.getElementById('restart').addEventListener('click', function(e){
+    e.stopPropagation(); go(0);
+    setTimeout(function(){ stage.classList.remove('entered'); }, 800);
+  });
+
+  /* ══════ 隐藏角落：点开才看得见 ══════ */
+  var PEEK = {
+    h1:{img:'img/eye-h01-canteen-cardboard.png', k:'食堂阿姨 · 背后之一', t:'桌脚下的三年',
+      body:['窗边那张桌子，左前腿短了一截，写字会晃。她试过垫纸、垫橡胶，最后选定一块折成四折的硬纸板。',
+            '学生换了一茬又一茬，纸板磨薄了就换新的，位置从没挪过。有毕业生回校，特意坐回那个位置。'],
+      q:'桌子稳了，人才坐得住。'},
+    h2:{img:'img/eye-h02-canteen-washroom.png', k:'食堂阿姨 · 背后之二', t:'洗碗间的两小时',
+      body:['午市结束，别人下班了，她还要在洗碗间多待两个小时。饭粒粘牢的地方，用指腹一点点抠下来。',
+            '消毒柜的温度表她每天看两回，记录本上一天一行，四年没断过。机器会坏，人得替它盯着。'],
+      q:'碗干净不干净，摸一下就知道。'},
+    h3:{img:'img/eye-h03-dorm-lamp.png', k:'宿管 · 背后之一', t:'值班室的门灯',
+      body:['门厅那盏小灯不为照明——楼道本来有灯。它是给晚归的孩子留的：亮着，说明阿姨还在。',
+            '开关在抽屉里，贴着一张褪色标签：晚归请敲门。孩子知道灯在等，走夜路就不慌。'],
+      q:'灯亮着，就是有人在。'},
+    h4:{img:'img/eye-h04-dorm-notebook.png', k:'宿管 · 背后之二', t:'一本翻旧的笔记本',
+      body:['本子已经用到第三本。里头记着三楼热水器的维修日期、下水道的疏通记录，还有一条：快递放了七天，记得提醒。',
+            '最后一页是几行生日。她管这叫"小事台账"，见面时会问一句。'],
+      q:'记下来，就不会忘。'},
+    h5:{img:'img/eye-h05-clean-grate.png', k:'校园保洁 · 背后之一', t:'排水口的铁篦子',
+      body:['铁篦子每周抠两次。落叶烂在水里会堵，这是他入秋以后最上心的事。',
+            '有一次雨很大，他撑着伞在排水口守了半个钟头，蹲下去用手扒开叶子让水走。'],
+      q:'水走得了，路才是路。'},
+    h6:{img:'img/eye-h06-clean-leaves.png', k:'校园保洁 · 背后之二', t:'三袋落叶',
+      body:['深秋最忙，图书馆前那条路一天要装满三大袋。袋口他扎得松，好倒，不撒。',
+            '落叶轻，却最费工夫——扫成一堆，风一吹又散。他不恼，弯下腰重新拢一遍。'],
+      q:'风归风，我归我。'},
+    h7:{img:'img/eye-h07-guard-logbook.png', k:'校园保安 · 背后之一', t:'登记本上的一行字',
+      body:['登记本一页页写得工整。十一月二日那页的角落，有一行小字：晚归女生三人，已护送至宿舍楼下。',
+            '这样的字条每隔几天就有一条。他说不算任务，顺路，走一趟心里踏实。'],
+      q:'写下来，就当有个交代。'},
+    h8:{img:'img/eye-h08-guard-drawer.png', k:'校园保安 · 背后之二', t:'第三个抽屉',
+      body:['值班室第三个抽屉是失物招领处：校园卡、钥匙、雨伞，每样都写着捡到的日期。',
+            '卡片上没有照片的，他认不出主人，只能等。最长的一串钥匙，等了一个学期。'],
+      q:'他们来找的时候，我认得脸。'},
+    h9:{img:'img/eye-h09-repair-toolbag.png', k:'维修师傅 · 背后之一', t:'工具包的第一层',
+      body:['帆布工具包用了十一年，边角磨出了毛。第一层永远是扳手和试电笔——半夜抢修，没人有工夫翻包。',
+            '每样工具都有固定位置，用完放回。他说这不是习惯，是省时间。'],
+      q:'伸手就得摸到。'},
+    h10:{img:'img/eye-h10-repair-rubber.png', k:'维修师傅 · 背后之二', t:'梯子脚的橡胶套',
+      body:['梯子四个脚都套着橡胶套，是从报废的自行车胎上剪的。新铺的地板怕刮，一年换一副。',
+            '有老师问他为什么讲究，他摆摆手：楼是大家的，手艺是自己的。'],
+      q:'修东西的人，不能把东西修坏。'}
+  };
+
+  var peek = document.getElementById('peek');
+  var peekPanel = peek.querySelector('.panel');
+  var seen = {}, seenCountEl = document.getElementById('seenCount');
+  function peekOpen(){ return peek.classList.contains('open'); }
+  function updateSeen(){
+    seenCountEl.textContent = Object.keys(seen).length;
+  }
+
+  function openPeek(id, chipEl){
+    var d = PEEK[id];
+    if(!d) return;
+    document.getElementById('peekKicker').textContent = d.k;
+    document.getElementById('peekTitle').textContent = d.t;
+    var img = document.getElementById('peekImg');
+    img.src = d.img; img.alt = d.t;
+    document.getElementById('peekBody').innerHTML = d.body.map(function(p){ return '<p>'+p+'</p>'; }).join('');
+    document.getElementById('peekQuote').textContent = d.q;
+    peek.classList.add('open');
+    peekPanel.scrollTop = 0;
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){ peek.classList.add('show'); });
+    });
+    if(!seen[id]){
+      seen[id] = 1;
+      if(chipEl){
+        chipEl.classList.add('viewed');
+        var badge = chipEl.querySelector('b');
+        if(badge) badge.textContent = '✓';
+      }
+      updateSeen();
+    }
+  }
+  function closePeek(){
+    peek.classList.remove('show');
+    setTimeout(function(){ peek.classList.remove('open'); }, 760);
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-peek]'), function(el){
+    el.addEventListener('click', function(e){
+      e.stopPropagation();
+      openPeek(el.getAttribute('data-peek'), el);
+    });
+  });
+  peek.addEventListener('click', function(e){ if(e.target === peek) closePeek(); });
+  document.getElementById('peekClose').addEventListener('click', function(e){ e.stopPropagation(); closePeek(); });
+
+  render();
+})();
+</script>
+</body>
+</html>
