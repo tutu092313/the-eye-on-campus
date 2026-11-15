@@ -256,7 +256,7 @@
     border:1px solid var(--line);background:rgba(244,239,230,.92);color:var(--ink-soft);font-size:14px;line-height:1;cursor:pointer;font-family:var(--serif);}
   #peek .p-kicker{display:flex;justify-content:space-between;align-items:baseline;font-size:8.5px;letter-spacing:.3em;color:var(--warm);margin-bottom:10px;}
   #peek .p-kicker .p-time{font-size:12px;letter-spacing:.2em;color:var(--ink-soft);}
-  #peek .p-img{width:100%;height:214px;border-radius:10px;overflow:hidden;background:var(--cream);padding:4px;}
+  #peek .p-img{position:relative;width:100%;height:214px;border-radius:10px;overflow:hidden;background:var(--cream);padding:4px;}
   #peek .p-img img{width:100%;height:100%;object-fit:cover;filter:saturate(.92);}
   #peek h3{font-size:17.5px;letter-spacing:.1em;margin:12px 0 8px;font-weight:600;}
   #peek .p-body p{font-size:12.8px;line-height:2;letter-spacing:.03em;text-align:justify;color:var(--ink);margin-bottom:8px;}
@@ -265,6 +265,33 @@
   #peek .p-quote{font-size:13px;line-height:1.9;color:var(--ink);border-top:1px solid var(--line);padding-top:10px;letter-spacing:.06em;}
   #peek .p-quote::before{content:"「";color:var(--warm-soft);}
   #peek .p-quote::after{content:"」";color:var(--warm-soft);}
+
+  /* ─ 弹层内小游戏 ─ */
+  #peekGame{position:absolute;inset:4px;z-index:2;touch-action:none;-webkit-user-select:none;user-select:none;}
+  #peekGame .g-tip{position:absolute;left:50%;top:8px;transform:translateX(-50%);z-index:5;
+    font-size:9px;letter-spacing:.26em;color:#f4efe6;background:rgba(40,34,27,.72);
+    padding:4px 12px;border-radius:20px;white-space:nowrap;pointer-events:none;transition:opacity .5s;}
+  #peekGame.played .g-tip{opacity:0;}
+  #peekGame .g-done{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:5;
+    font-size:9.5px;letter-spacing:.22em;color:#3f3a33;background:rgba(244,239,230,.94);
+    padding:4px 14px;border-radius:20px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .7s;}
+  /* 手电筒照亮 */
+  .fl-dark{position:absolute;inset:0;background:#070503;
+    -webkit-mask-image:radial-gradient(circle var(--fr,0px) at var(--mx,50%) var(--my,50%), transparent 0 36%, #000 74%);
+    mask-image:radial-gradient(circle var(--fr,0px) at var(--mx,50%) var(--my,50%), transparent 0 36%, #000 74%);}
+  .fl-dark.gone{opacity:0;transition:opacity 1.5s;}
+  .fl-glow{position:absolute;inset:0;opacity:0;transition:opacity .35s;pointer-events:none;
+    background:radial-gradient(circle 80px at var(--mx,50%) var(--my,50%), rgba(255,214,150,.32), rgba(255,214,150,0) 72%);}
+  .fl-live .fl-glow{opacity:1;}
+  /* 捡垃圾入袋 */
+  .lit-item{position:absolute;width:36px;height:36px;margin:-18px 0 0 -18px;cursor:grab;z-index:3;
+    filter:drop-shadow(0 2px 3px rgba(40,34,27,.35));transition:transform .45s ease,opacity .4s;}
+  .lit-item.drag{transition:none;cursor:grabbing;z-index:4;}
+  .lit-item.gone{opacity:0;pointer-events:none;}
+  .lit-bin{position:absolute;right:6px;bottom:6px;width:62px;height:58px;z-index:2;opacity:.94;transition:transform .4s;}
+  .lit-bin.bump{transform:scale(1.16);}
+  .lit-count{position:absolute;left:8px;bottom:10px;z-index:5;font-size:9px;letter-spacing:.18em;
+    color:#3f3a33;background:rgba(244,239,230,.92);padding:3px 10px;border-radius:16px;pointer-events:none;}
 
   @media (min-width:520px){
     #stage{border-radius:20px;height:min(100%,880px);margin:auto;}
@@ -471,6 +498,9 @@
       <div class="hot-chip" data-peek="h8" style="left:22%;bottom:-10px;width:26%;transform:rotate(3.6deg)">
         <img loading="lazy" decoding="async" src="img/eye-h08-guard-drawer.jpg" alt="失物抽屉" style="height:86px"><span>抽 屉</span><b>+</b>
       </div>
+      <div class="hot-chip" data-peek="h11" style="left:48%;bottom:-14px;width:24%;transform:rotate(-2deg);z-index:3">
+        <img loading="lazy" decoding="async" src="img/eye-h11-darkpatrol.jpg" alt="夜间巡逻" style="height:86px"><span>夜 巡</span><b>+</b>
+      </div>
     </div>
     <p class="lead rise" style="--d:1.4s">一小时几十次抬手：放行，拦下。夜里巡逻，手电在死角多停两秒。</p>
     <p class="mono rise" style="--d:1.9s">校门小，责任大。我不多话，我看着就行。</p>
@@ -525,7 +555,7 @@
       <div class="g-portrait" style="--d:1.1s;--rot:-3.6deg;top:8px;left:116px;width:68px;height:68px" data-go="p-dorm" data-mt="23:40"><div class="g-time">23:40</div><img loading="lazy" decoding="async" src="img/eye-s03-corridor.jpg" alt="宿管"><span class="g-name">宿管</span></div>
     </div>
     <div id="gatherTitle" class="rise" style="--d:1.3s">他 们 的 二 十 四 小 时</div>
-    <div id="seenLine" class="rise" style="--d:1.45s">你 已 看 见 <b id="seenCount">0</b> / 10 个角落</div>
+    <div id="seenLine" class="rise" style="--d:1.45s">你 已 看 见 <b id="seenCount">0</b> / <span id="seenTotal">11</span> 个角落</div>
     <p id="gatherSub" class="rise" style="--d:1.6s">轻触人像回到他的时刻。<br>没点开的方块，还在等。</p>
     <button id="toAsk" class="rise" style="--d:1.75s" disabled>十 个 角 落 看完 后 · 有 话 想 问 你</button>
   </section>
@@ -576,7 +606,7 @@
     <div class="panel">
       <button class="close" id="peekClose" aria-label="关闭">×</button>
       <div class="p-kicker"><span id="peekKicker"></span><span class="p-time" id="peekTime"></span></div>
-      <div class="p-img"><img id="peekImg" alt="背后故事"></div>
+      <div class="p-img"><img id="peekImg" alt="背后故事"><div id="peekGame"></div></div>
       <h3 id="peekTitle"></h3>
       <div class="p-body" id="peekBody"></div>
       <div class="p-orig">TA 的原话 · 未 经 修 饰</div>
@@ -1013,7 +1043,7 @@
       body:['铁篦子每周抠两次。落叶烂在水里会堵，这是他入秋以后最上心的事。',
             '有一次雨很大，他撑着伞在排水口守了半个钟头，蹲下去用手扒开叶子让水走。'],
       q:'水走得了，路才是路。'},
-    h6:{img:'img/eye-h06-clean-leaves.jpg', time:'07:05', k:'校园保洁 · 背后之二', t:'三袋落叶',
+    h6:{img:'img/eye-s04-wetpath.jpg', time:'07:05', k:'校园保洁 · 背后之二', t:'三袋落叶', game:'litter',
       body:['深秋最忙，图书馆前那条路一天要装满三大袋。袋口他扎得松，好倒，不撒。',
             '落叶轻，却最费工夫——扫成一堆，风一吹又散。他不恼，弯下腰重新拢一遍。'],
       q:'风归风，我归我。'},
@@ -1032,7 +1062,11 @@
     h10:{img:'img/eye-h10-repair-rubber.jpg', time:'15:26', k:'维修师傅 · 背后之二', t:'梯子脚的橡胶套',
       body:['梯子四个脚都套着橡胶套，是从报废的自行车胎上剪的。新铺的地板怕刮，一年换一副。',
             '有老师问他为什么讲究，他摆摆手：楼是大家的，手艺是自己的。'],
-      q:'修东西的人，不能把东西修坏。'}
+      q:'修东西的人，不能把东西修坏。'},
+    h11:{img:'img/eye-h11-darkpatrol.jpg', time:'23:40', k:'校园保安 · 背后之三', t:'手电筒的两秒钟', game:'flashlight',
+      body:['夜里巡逻他带一只旧手电，光柱不晃——照到死角，会多停两秒。车棚底下、楼梯拐角、湖边矮墙，他都记得。',
+            '学生以为他在找什么。他说什么也不找，光停一下，就是告诉可能在那儿的人：有人看着呢。'],
+      q:'光到不了的地方，人就多走两步。'}
   };
 
   var peek = document.getElementById('peek');
@@ -1060,6 +1094,9 @@
     img.src = d.img; img.alt = d.t;
     document.getElementById('peekBody').innerHTML = d.body.map(function(p){ return '<p>'+p+'</p>'; }).join('');
     document.getElementById('peekQuote').textContent = d.q;
+    var gameEl = document.getElementById('peekGame');
+    gameEl.innerHTML = ''; gameEl.className = ''; gameEl.removeAttribute('style');
+    if(d.game) initGame(d.game, gameEl);
     peek.classList.add('open');
     peekPanel.scrollTop = 0;
     requestAnimationFrame(function(){
@@ -1078,6 +1115,141 @@
   function closePeek(){
     peek.classList.remove('show');
     setTimeout(function(){ peek.classList.remove('open'); }, 760);
+  }
+
+  /* ══════ 弹层内小游戏 ══════ */
+  function initGame(type, root){
+    if(type === 'flashlight') initFlashlight(root);
+    else if(type === 'litter') initLitter(root);
+  }
+
+  /* 手电筒：涂抹屏幕照亮夜巡画面 */
+  function initFlashlight(root){
+    root.innerHTML =
+      '<div class="g-tip">按 住 涂 抹 · 打 开 手 电 筒</div>' +
+      '<div class="fl-glow"></div><div class="fl-dark"></div>' +
+      '<div class="g-done">照 亮 了 · 他 每 晚 23:40 出 发，00:30 才回</div>';
+    var dark = root.querySelector('.fl-dark');
+    var glow = root.querySelector('.fl-glow');
+    var tip = root.querySelector('.g-tip');
+    var done = root.querySelector('.g-done');
+    var COLS = 8, ROWS = 5, visited = {}, finished = false;
+
+    function setLight(e){
+      var r = root.getBoundingClientRect();
+      var x = e.clientX - r.left, y = e.clientY - r.top;
+      root.style.setProperty('--mx', x + 'px');
+      root.style.setProperty('--my', y + 'px');
+      root.style.setProperty('--fr', '86px');
+      root.classList.add('fl-live');
+    }
+    function mark(e){
+      var r = root.getBoundingClientRect();
+      var cx = Math.max(0, Math.min(COLS - 1, Math.floor((e.clientX - r.left) / r.width * COLS)));
+      var cy = Math.max(0, Math.min(ROWS - 1, Math.floor((e.clientY - r.top) / r.height * ROWS)));
+      visited[cx + '_' + cy] = 1;
+      if(Object.keys(visited).length >= COLS * ROWS * 0.42) finish();
+    }
+    function finish(){
+      if(finished) return; finished = true;
+      root.classList.add('played');
+      root.classList.remove('fl-live');
+      dark.classList.add('gone');
+      done.style.opacity = 1;
+    }
+    function onDown(e){
+      e.preventDefault(); e.stopPropagation();
+      root.setPointerCapture(e.pointerId);
+      setLight(e); mark(e);
+    }
+    function onMove(e){
+      if(e.buttons === 0 && e.pointerType === 'mouse') return;
+      setLight(e); mark(e);
+    }
+    function onUp(){ root.classList.remove('fl-live'); }
+    root.addEventListener('pointerdown', onDown);
+    root.addEventListener('pointermove', onMove);
+    root.addEventListener('pointerup', onUp);
+    root.addEventListener('pointercancel', onUp);
+    /* 开场提示：微弱地亮一下中间，暗示可交互 */
+    setTimeout(function(){
+      if(finished) return;
+      root.style.setProperty('--mx', '50%'); root.style.setProperty('--my', '50%');
+      root.style.setProperty('--fr', '40px');
+      root.classList.add('fl-live');
+      setTimeout(function(){ if(!finished){ root.classList.remove('fl-live'); root.style.setProperty('--fr', '0px'); } }, 1400);
+    }, 900);
+  }
+
+  /* 捡垃圾：把落叶杂物拖进落叶袋 */
+  function initLitter(root){
+    var S = {
+      leaf:  '<svg viewBox="0 0 36 36"><path d="M18 4 C28 11 30 22 18 32 C6 22 8 11 18 4Z" fill="#b08d5f"/><path d="M18 9 L18 28" stroke="#8a6a42" stroke-width="1.3" fill="none"/></svg>',
+      leaf2: '<svg viewBox="0 0 36 36"><path d="M18 6 C30 12 28 24 18 30 C8 24 6 12 18 6Z" fill="#a3825f" transform="rotate(28 18 18)"/><path d="M18 10 L18 26" stroke="#7c5f3c" stroke-width="1.3" fill="none" transform="rotate(28 18 18)"/></svg>',
+      bottle:'<svg viewBox="0 0 36 36"><rect x="13" y="10" width="10" height="21" rx="4" fill="#9db3a5" opacity=".92"/><rect x="15" y="5" width="6" height="7" rx="2.5" fill="#7f9a8c"/></svg>',
+      can:   '<svg viewBox="0 0 36 36"><rect x="12" y="8" width="12" height="21" rx="2" fill="#c2a878"/><ellipse cx="18" cy="8" rx="6" ry="2.2" fill="#a3825f"/><path d="M12 14 L24 14" stroke="#a3825f" stroke-width="1"/></svg>',
+      paper: '<svg viewBox="0 0 36 36"><path d="M9 13 L15 8 L23 10 L28 16 L24 25 L13 27 L8 20 Z" fill="#e8e0cf" stroke="#c9b39a" stroke-width="1"/></svg>'
+    };
+    var spots = [
+      {x:18, y:24, s:'leaf'},  {x:58, y:16, s:'bottle'}, {x:38, y:40, s:'can'},
+      {x:74, y:52, s:'leaf2'}, {x:14, y:56, s:'paper'},  {x:46, y:68, s:'leaf'}
+    ];
+    var BIN = '<svg viewBox="0 0 62 58"><path d="M13 16 L49 16 L45 54 L17 54 Z" fill="#a3825f"/><path d="M22 16 C22 7 40 7 40 16" fill="none" stroke="#8a6a42" stroke-width="3.4"/><path d="M13 16 L49 16" stroke="#8a6a42" stroke-width="2"/><path d="M16 26 L46 26 M16 36 L46 36 M17 46 L45 46" stroke="#8a6a42" stroke-width="1" opacity=".55"/><text x="31" y="37" text-anchor="middle" font-size="9" fill="#f4efe6" letter-spacing="3" font-family="serif">落 叶 袋</text></svg>';
+    root.innerHTML =
+      '<div class="g-tip">把 落 叶 杂 物 拖 进 袋 子</div>' +
+      '<div class="lit-count">已收拾 0/6</div><div class="lit-bin">' + BIN + '</div>' +
+      '<div class="g-done">✓ 路 面 又 干 净 了 · 风来也不怕</div>';
+    var bin = root.querySelector('.lit-bin');
+    var countEl = root.querySelector('.lit-count');
+    var done = root.querySelector('.g-done');
+    var got = 0;
+
+    spots.forEach(function(sp){
+      var el = document.createElement('div');
+      el.className = 'lit-item';
+      el.innerHTML = S[sp.s];
+      el.style.left = sp.x + '%';
+      el.style.top = sp.y + '%';
+      root.appendChild(el);
+      var dragging = false, sx = 0, sy = 0;
+      el.addEventListener('pointerdown', function(e){
+        e.preventDefault(); e.stopPropagation();
+        dragging = true; el.classList.add('drag');
+        try{ el.setPointerCapture(e.pointerId); }catch(_e){}
+        var r = root.getBoundingClientRect();
+        sx = e.clientX - r.left; sy = e.clientY - r.top;
+      });
+      el.addEventListener('pointermove', function(e){
+        if(!dragging) return;
+        e.preventDefault();
+        var r = root.getBoundingClientRect();
+        el.style.transform = 'translate(' + (e.clientX - r.left - sx) + 'px,' + (e.clientY - r.top - sy) + 'px)';
+      });
+      function release(e){
+        if(!dragging) return; dragging = false;
+        el.classList.remove('drag');
+        var r = root.getBoundingClientRect();
+        var x = e.clientX - r.left, y = e.clientY - r.top;
+        var b = bin.getBoundingClientRect();
+        var bx = b.left + b.width / 2 - r.left, by = b.top + b.height / 2 - r.top;
+        if(Math.hypot(x - bx, y - by) < 54){
+          el.style.transform = 'translate(' + (bx - parseFloat(el.style.left)/100*r.width) + 'px,' + (by - parseFloat(el.style.top)/100*r.height) + 'px) scale(.25)';
+          setTimeout(function(){ el.classList.add('gone'); }, 180);
+          got++;
+          countEl.textContent = '已收拾 ' + got + '/6';
+          bin.classList.add('bump');
+          setTimeout(function(){ bin.classList.remove('bump'); }, 420);
+          if(got >= 6){
+            root.classList.add('played');
+            done.style.opacity = 1;
+          }
+        } else {
+          el.style.transform = '';
+        }
+      }
+      el.addEventListener('pointerup', release);
+      el.addEventListener('pointercancel', release);
+    });
   }
 
   Array.prototype.forEach.call(document.querySelectorAll('[data-peek]'), function(el){
