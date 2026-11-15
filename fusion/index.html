@@ -292,6 +292,29 @@
   .lit-bin.bump{transform:scale(1.16);}
   .lit-count{position:absolute;left:8px;bottom:10px;z-index:5;font-size:9px;letter-spacing:.18em;
     color:#3f3a33;background:rgba(244,239,230,.92);padding:3px 10px;border-radius:16px;pointer-events:none;}
+  /* 打饭拖勺 */
+  .sv-scoop{position:absolute;left:12px;bottom:12px;width:44px;height:44px;cursor:grab;z-index:3;
+    filter:drop-shadow(0 2px 3px rgba(40,34,27,.35));transition:transform .45s ease;}
+  .sv-scoop.drag{transition:none;cursor:grabbing;z-index:4;}
+  .sv-tray{position:absolute;right:8px;bottom:8px;width:78px;height:56px;z-index:2;transition:transform .4s;}
+  .sv-tray.bump{transform:scale(1.12);}
+  .sv-tray svg{width:100%;height:100%;}
+  .sv-mound{position:absolute;width:22px;height:11px;border-radius:6px;opacity:0;transition:opacity .35s;transform:scale(.6);z-index:1;}
+  .sv-mound.on{opacity:1;transform:scale(1);}
+  .sv-rice{left:11px;top:14px;background:#fffdf6;box-shadow:inset 0 -2px 0 #e3d9c2;}
+  .sv-greens{left:45px;top:18px;width:11px;background:#7f9a6e;}
+  .sv-stew{left:60px;top:16px;width:12px;background:#a3684f;}
+  .sv-count{position:absolute;left:8px;bottom:10px;z-index:5;font-size:9px;letter-spacing:.18em;
+    color:#3f3a33;background:rgba(244,239,230,.92);padding:3px 10px;border-radius:16px;pointer-events:none;}
+  /* 拧螺丝 */
+  .wr-bolt{position:absolute;left:50%;top:50%;width:64px;height:64px;margin:-32px 0 0 -32px;cursor:pointer;z-index:3;
+    filter:drop-shadow(0 3px 4px rgba(40,34,27,.4));transition:transform .5s cubic-bezier(.3,1.4,.5,1),filter .8s;}
+  .wr-bolt.fixed{filter:drop-shadow(0 0 8px rgba(163,130,95,.75));}
+  .wr-wrench{position:absolute;left:50%;top:50%;width:54px;height:54px;margin:-27px 0 0 -27px;z-index:2;
+    opacity:0;pointer-events:none;transition:opacity .3s,transform .45s ease;}
+  .wr-wrench.swing{opacity:.95;transform:rotate(-38deg) translate(30px,-30px);}
+  .wr-count{position:absolute;left:50%;top:10px;transform:translateX(-50%);z-index:5;margin-top:26px;font-size:9px;letter-spacing:.18em;
+    color:#3f3a33;background:rgba(244,239,230,.92);padding:3px 10px;border-radius:16px;pointer-events:none;}
 
   @media (min-width:520px){
     #stage{border-radius:20px;height:min(100%,880px);margin:auto;}
@@ -1023,47 +1046,47 @@
 
   /* ══════ 隐藏角落：原话弹层 ══════ */
   var PEEK = {
-    h1:{img:'img/eye-h01-canteen-cardboard.jpg', time:'12:54', k:'食堂阿姨 · 背后之一', t:'桌脚下的三年',
+    h1:{img:'../img/eye-h01-canteen-cardboard.jpg', time:'12:54', k:'食堂阿姨 · 背后之一', t:'桌脚下的三年', game:'serve',
       body:['窗边那张桌子，左前腿短了一截，写字会晃。她试过垫纸、垫橡胶，最后选定一块折成四折的硬纸板。',
             '学生换了一茬又一茬，纸板磨薄了就换新的，位置从没挪过。有毕业生回校，特意坐回那个位置。'],
       q:'桌子稳了，人才坐得住。'},
-    h2:{img:'img/eye-h02-canteen-washroom.jpg', time:'13:26', k:'食堂阿姨 · 背后之二', t:'洗碗间的两小时',
+    h2:{img:'../img/eye-h02-canteen-washroom.jpg', time:'13:26', k:'食堂阿姨 · 背后之二', t:'洗碗间的两小时',
       body:['午市结束，别人下班了，她还要在洗碗间多待两个小时。饭粒粘牢的地方，用指腹一点点抠下来。',
             '消毒柜的温度表她每天看两回，记录本上一天一行，四年没断过。机器会坏，人得替它盯着。'],
       q:'碗干净不干净，摸一下就知道。'},
-    h3:{img:'img/eye-h03-dorm-lamp.jpg', time:'23:58', k:'宿管 · 背后之一', t:'值班室的门灯',
+    h3:{img:'../img/eye-h03-dorm-lamp.jpg', time:'23:58', k:'宿管 · 背后之一', t:'值班室的门灯', game:'flashlight', gameDone:'✓ 走 廊 亮 了 · 门 灯 为 晚 归 的 人 留 着',
       body:['门厅那盏小灯不为照明——楼道本来有灯。它是给晚归的孩子留的：亮着，说明阿姨还在。',
             '开关在抽屉里，贴着一张褪色标签：晚归请敲门。孩子知道灯在等，走夜路就不慌。'],
       q:'灯亮着，就是有人在。'},
-    h4:{img:'img/eye-h04-dorm-notebook.jpg', time:'06:05', k:'宿管 · 背后之二', t:'一本翻旧的笔记本',
+    h4:{img:'../img/eye-h04-dorm-notebook.jpg', time:'06:05', k:'宿管 · 背后之二', t:'一本翻旧的笔记本',
       body:['本子已经用到第三本。里头记着三楼热水器的维修日期、下水道的疏通记录，还有一条：快递放了七天，记得提醒。',
             '最后一页是几行生日。她管这叫"小事台账"，见面时会问一句。'],
       q:'记下来，就不会忘。'},
-    h5:{img:'img/eye-h05-clean-grate.jpg', time:'06:18', k:'校园保洁 · 背后之一', t:'排水口的铁篦子',
+    h5:{img:'../img/eye-h05-clean-grate.jpg', time:'06:18', k:'校园保洁 · 背后之一', t:'排水口的铁篦子',
       body:['铁篦子每周抠两次。落叶烂在水里会堵，这是他入秋以后最上心的事。',
             '有一次雨很大，他撑着伞在排水口守了半个钟头，蹲下去用手扒开叶子让水走。'],
       q:'水走得了，路才是路。'},
-    h6:{img:'img/eye-s04-wetpath.jpg', time:'07:05', k:'校园保洁 · 背后之二', t:'三袋落叶', game:'litter',
+    h6:{img:'../img/eye-s04-wetpath.jpg', time:'07:05', k:'校园保洁 · 背后之二', t:'三袋落叶', game:'litter',
       body:['深秋最忙，图书馆前那条路一天要装满三大袋。袋口他扎得松，好倒，不撒。',
             '落叶轻，却最费工夫——扫成一堆，风一吹又散。他不恼，弯下腰重新拢一遍。'],
       q:'风归风，我归我。'},
-    h7:{img:'img/eye-h07-guard-logbook.jpg', time:'00:20', k:'校园保安 · 背后之一', t:'登记本上的一行字',
+    h7:{img:'../img/eye-h07-guard-logbook.jpg', time:'00:20', k:'校园保安 · 背后之一', t:'登记本上的一行字',
       body:['登记本一页页写得工整。十一月二日那页的角落，有一行小字：晚归女生三人，已护送至宿舍楼下。',
             '这样的字条每隔几天就有一条。他说不算任务，顺路，走一趟心里踏实。'],
       q:'写下来，就当有个交代。'},
-    h8:{img:'img/eye-h08-guard-drawer.jpg', time:'08:40', k:'校园保安 · 背后之二', t:'第三个抽屉',
+    h8:{img:'../img/eye-h08-guard-drawer.jpg', time:'08:40', k:'校园保安 · 背后之二', t:'第三个抽屉',
       body:['值班室第三个抽屉是失物招领处：校园卡、钥匙、雨伞，每样都写着捡到的日期。',
             '卡片上没有照片的，他认不出主人，只能等。最长的一串钥匙，等了一个学期。'],
       q:'他们来找的时候，我认得脸。'},
-    h9:{img:'img/eye-h09-repair-toolbag.jpg', time:'15:02', k:'维修师傅 · 背后之一', t:'工具包的第一层',
+    h9:{img:'../img/eye-h09-repair-toolbag.jpg', time:'15:02', k:'维修师傅 · 背后之一', t:'工具包的第一层', game:'wrench',
       body:['帆布工具包用了十一年，边角磨出了毛。第一层永远是扳手和试电笔——半夜抢修，没人有工夫翻包。',
             '每样工具都有固定位置，用完放回。他说这不是习惯，是省时间。'],
       q:'伸手就得摸到。'},
-    h10:{img:'img/eye-h10-repair-rubber.jpg', time:'15:26', k:'维修师傅 · 背后之二', t:'梯子脚的橡胶套',
+    h10:{img:'../img/eye-h10-repair-rubber.jpg', time:'15:26', k:'维修师傅 · 背后之二', t:'梯子脚的橡胶套',
       body:['梯子四个脚都套着橡胶套，是从报废的自行车胎上剪的。新铺的地板怕刮，一年换一副。',
             '有老师问他为什么讲究，他摆摆手：楼是大家的，手艺是自己的。'],
       q:'修东西的人，不能把东西修坏。'},
-    h11:{img:'img/eye-h11-darkpatrol.jpg', time:'23:40', k:'校园保安 · 背后之三', t:'手电筒的两秒钟', game:'flashlight',
+    h11:{img:'../img/eye-h11-darkpatrol.jpg', time:'23:40', k:'校园保安 · 背后之三', t:'手电筒的两秒钟', game:'flashlight',
       body:['夜里巡逻他带一只旧手电，光柱不晃——照到死角，会多停两秒。车棚底下、楼梯拐角、湖边矮墙，他都记得。',
             '学生以为他在找什么。他说什么也不找，光停一下，就是告诉可能在那儿的人：有人看着呢。'],
       q:'光到不了的地方，人就多走两步。'}
@@ -1096,7 +1119,7 @@
     document.getElementById('peekQuote').textContent = d.q;
     var gameEl = document.getElementById('peekGame');
     gameEl.innerHTML = ''; gameEl.className = ''; gameEl.removeAttribute('style');
-    if(d.game) initGame(d.game, gameEl);
+    if(d.game) initGame(d.game, gameEl, d);
     peek.classList.add('open');
     peekPanel.scrollTop = 0;
     requestAnimationFrame(function(){
@@ -1118,17 +1141,20 @@
   }
 
   /* ══════ 弹层内小游戏 ══════ */
-  function initGame(type, root){
-    if(type === 'flashlight') initFlashlight(root);
-    else if(type === 'litter') initLitter(root);
+  function initGame(type, root, d){
+    if(type === 'flashlight') initFlashlight(root, d);
+    else if(type === 'litter') initLitter(root, d);
+    else if(type === 'serve') initServe(root, d);
+    else if(type === 'wrench') initWrench(root, d);
   }
 
   /* 手电筒：涂抹屏幕照亮夜巡画面 */
-  function initFlashlight(root){
+  function initFlashlight(root, d){
+    var doneText = (d && d.gameDone) ? d.gameDone : '照 亮 了 · 他 每 晚 23:40 出 发，00:30 才回';
     root.innerHTML =
       '<div class="g-tip">按 住 涂 抹 · 打 开 手 电 筒</div>' +
       '<div class="fl-glow"></div><div class="fl-dark"></div>' +
-      '<div class="g-done">照 亮 了 · 他 每 晚 23:40 出 发，00:30 才回</div>';
+      '<div class="g-done">' + doneText + '</div>';
     var dark = root.querySelector('.fl-dark');
     var glow = root.querySelector('.fl-glow');
     var tip = root.querySelector('.g-tip');
@@ -1249,6 +1275,97 @@
       }
       el.addEventListener('pointerup', release);
       el.addEventListener('pointercancel', release);
+    });
+  }
+
+  /* 打饭：把饭勺拖到餐盘，打满三勺 */
+  function initServe(root){
+    var SCOOP = '<svg viewBox="0 0 44 44"><ellipse cx="16" cy="30" rx="13" ry="10" fill="#e8e0cf" stroke="#c9b39a" stroke-width="1.6"/><ellipse cx="16" cy="30" rx="8" ry="6" fill="#f7f2e6"/><path d="M25 25 C33 18 36 12 39 6" stroke="#8a6a42" stroke-width="3.6" fill="none" stroke-linecap="round"/></svg>';
+    var TRAY  = '<svg viewBox="0 0 78 56"><rect x="2" y="6" width="74" height="44" rx="7" fill="#c2a878"/><rect x="8" y="12" width="28" height="32" rx="4" fill="#f4efe6"/><rect x="42" y="12" width="14" height="32" rx="3" fill="#f4efe6"/><rect x="62" y="12" width="8" height="32" rx="3" fill="#f4efe6"/><path d="M2 22 L76 22" stroke="#a3825f" stroke-width="1.2" opacity=".6"/></svg>';
+    var mounds = ['<div class="sv-mound sv-rice"></div>',
+                  '<div class="sv-mound sv-greens"></div>',
+                  '<div class="sv-mound sv-stew"></div>'];
+    root.innerHTML =
+      '<div class="g-tip">把 饭 勺 拖 到 餐 盘 · 打 满 三 勺</div>' +
+      '<div class="sv-count">已打 0/3 勺</div><div class="sv-tray">' + TRAY + mounds.join('') + '</div>' +
+      '<div class="sv-scoop">' + SCOOP + '</div>' +
+      '<div class="g-done">✓ 三 勺 打 满 · 稳 稳 当 当 的 一 顿</div>';
+    var tray = root.querySelector('.sv-tray');
+    var scoop = root.querySelector('.sv-scoop');
+    var countEl = root.querySelector('.sv-count');
+    var done = root.querySelector('.g-done');
+    var got = 0, dragging = false, sx = 0, sy = 0;
+
+    scoop.addEventListener('pointerdown', function(e){
+      e.preventDefault(); e.stopPropagation();
+      dragging = true; scoop.classList.add('drag');
+      try{ scoop.setPointerCapture(e.pointerId); }catch(_e){}
+      var r = root.getBoundingClientRect();
+      sx = e.clientX - r.left; sy = e.clientY - r.top;
+    });
+    scoop.addEventListener('pointermove', function(e){
+      if(!dragging) return;
+      e.preventDefault();
+      var r = root.getBoundingClientRect();
+      scoop.style.transform = 'translate(' + (e.clientX - r.left - sx) + 'px,' + (e.clientY - r.top - sy) + 'px)';
+    });
+    function release(e){
+      if(!dragging) return; dragging = false;
+      scoop.classList.remove('drag');
+      var r = root.getBoundingClientRect();
+      var x = e.clientX - r.left, y = e.clientY - r.top;
+      var t = tray.getBoundingClientRect();
+      var tx = t.left + t.width / 2 - r.left, ty = t.top + t.height / 2 - r.top;
+      if(Math.hypot(x - tx, y - ty) < 60){
+        var m = tray.querySelector('.sv-mound:not(.on)');
+        if(m) m.classList.add('on');
+        got++;
+        countEl.textContent = '已打 ' + got + '/3 勺';
+        tray.classList.add('bump');
+        setTimeout(function(){ tray.classList.remove('bump'); }, 420);
+        scoop.style.transform = 'translate(0,0) scale(.86)';
+        setTimeout(function(){ scoop.style.transform = ''; }, 320);
+        if(got >= 3){
+          root.classList.add('played');
+          done.style.opacity = 1;
+        }
+      } else {
+        scoop.style.transform = '';
+      }
+    }
+    scoop.addEventListener('pointerup', release);
+    scoop.addEventListener('pointercancel', release);
+  }
+
+  /* 拧螺丝：点一点，用扳手把松动的螺丝拧紧 */
+  function initWrench(root){
+    var BOLT = '<svg viewBox="0 0 64 64"><g id="wrG"><path d="M32 6 L52 17 L52 45 L32 56 L12 45 L12 17 Z" fill="#b0a08c" stroke="#8a6a42" stroke-width="2.4"/><path d="M32 14 L45 21 L45 41 L32 48 L19 41 L19 21 Z" fill="#c9b39a"/><circle cx="32" cy="31" r="9" fill="#3f3a33"/><path d="M26 27 L38 35 M26 35 L38 27" stroke="#f4efe6" stroke-width="2.2"/></g></svg>';
+    var WRENCH = '<svg viewBox="0 0 64 64"><path d="M14 50 L38 26 C34 18 38 10 46 8 L54 16 C52 24 44 28 36 24 L12 48 Z" fill="#a3825f" stroke="#8a6a42" stroke-width="2" opacity=".96"/></svg>';
+    root.innerHTML =
+      '<div class="g-tip">点 一 点 · 拧 紧 松 动 的 螺 丝</div>' +
+      '<div class="wr-count">已拧 0/4 圈</div>' +
+      '<div class="wr-bolt">' + BOLT + '</div>' +
+      '<div class="wr-wrench">' + WRENCH + '</div>' +
+      '<div class="g-done">✓ 拧 紧 了 · 梯 子 又 站 得 稳 稳 的</div>';
+    var bolt = root.querySelector('.wr-bolt');
+    var wrench = root.querySelector('.wr-wrench');
+    var countEl = root.querySelector('.wr-count');
+    var done = root.querySelector('.g-done');
+    var turns = 0;
+
+    bolt.addEventListener('pointerdown', function(e){
+      e.preventDefault(); e.stopPropagation();
+      if(turns >= 4) return;
+      turns++;
+      bolt.style.transform = 'rotate(' + (turns * 90) + 'deg)';
+      wrench.classList.add('swing');
+      setTimeout(function(){ wrench.classList.remove('swing'); }, 480);
+      countEl.textContent = '已拧 ' + turns + '/4 圈';
+      if(turns >= 4){
+        bolt.classList.add('fixed');
+        root.classList.add('played');
+        done.style.opacity = 1;
+      }
     });
   }
 
