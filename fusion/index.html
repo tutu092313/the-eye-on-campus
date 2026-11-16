@@ -1152,6 +1152,7 @@
     document.getElementById('peekTime').textContent = d.time;
     document.getElementById('peekTitle').textContent = d.t;
     var img = document.getElementById('peekImg');
+    img.onerror = function(){ img.onerror=null; img.src = d.img.replace(/\.webp$/, '.jpg'); };
     img.src = d.img; img.alt = d.t;
     document.getElementById('peekBody').innerHTML = d.body.map(function(p){ return '<p>'+p+'</p>'; }).join('');
     document.getElementById('peekQuote').textContent = d.q;
