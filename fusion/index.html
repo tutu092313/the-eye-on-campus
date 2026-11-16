@@ -182,6 +182,16 @@
   .mono{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:15px;line-height:1.95;letter-spacing:.07em;color:var(--ink);}
   .mono::before{content:"「";color:var(--warm-soft);}
   .mono::after{content:"」";color:var(--warm-soft);}
+  /* 回到时之眼 */
+  .back-clock{margin:24px 0 8px;display:flex;flex-direction:column;align-items:center;gap:9px;}
+  .bc-btn{display:inline-flex;align-items:center;gap:9px;padding:11px 24px;border-radius:999px;
+    border:1px solid var(--warm-soft);background:rgba(244,239,230,.7);color:var(--warm);
+    font-family:inherit;font-size:12px;letter-spacing:.14em;cursor:pointer;
+    box-shadow:0 4px 14px rgba(63,58,51,.08);transition:background .35s,color .35s,transform .3s,border-color .35s;}
+  .bc-btn:active{transform:scale(.97);}
+  .bc-btn:hover{background:var(--warm);color:var(--paper);border-color:var(--warm);}
+  .bc-btn .bc-ar{font-size:13px;opacity:.85;letter-spacing:0;}
+  .bc-note{font-style:normal;font-size:9.5px;letter-spacing:.28em;color:var(--ink-soft);opacity:.7;}
 
   /* ═══ 汇聚页：环形时间轴 ═══ */
   #p-gather{justify-content:flex-start;align-items:center;text-align:center;overflow-y:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
@@ -450,6 +460,10 @@
     </div>
     <p class="lead rise" style="--d:1.4s">十二点五十分，最后一拨人离席。她擦一张桌子要两遍：一遍去油，一遍收水。</p>
     <p class="mono rise" style="--d:1.9s">孩子们吃得快，我就得擦得慢一点。</p>
+    <div class="back-clock rise" style="--d:2.3s">
+      <button type="button" class="bc-btn" data-back="clock"><span class="bc-ar">←</span>回 到 时 之 眼 · 挑 下 一 个 时 刻</button>
+      <i class="bc-note">或 从 此 页 向 下 滑 动</i>
+    </div>
   </section>
 
   <!-- 5 宿管 -->
@@ -475,6 +489,10 @@
     </div>
     <p class="lead rise" style="--d:1.4s">熄灯铃响过，她提着灯从一楼往上走。看插销，看窗，看谁还没回。</p>
     <p class="mono rise" style="--d:1.9s">整栋楼睡了，我替他们醒着。</p>
+    <div class="back-clock rise" style="--d:2.3s">
+      <button type="button" class="bc-btn" data-back="clock"><span class="bc-ar">←</span>回 到 时 之 眼 · 挑 下 一 个 时 刻</button>
+      <i class="bc-note">或 从 此 页 向 下 滑 动</i>
+    </div>
   </section>
 
   <!-- 6 保洁 -->
@@ -500,6 +518,10 @@
     </div>
     <p class="lead rise" style="--d:1.4s">五点五十，天刚泛灰。他要赶在七点二十之前，把这条路扫完。</p>
     <p class="mono rise" style="--d:1.9s">路干净了，孩子们的早晨就顺了。</p>
+    <div class="back-clock rise" style="--d:2.3s">
+      <button type="button" class="bc-btn" data-back="clock"><span class="bc-ar">←</span>回 到 时 之 眼 · 挑 下 一 个 时 刻</button>
+      <i class="bc-note">或 从 此 页 向 下 滑 动</i>
+    </div>
   </section>
 
   <!-- 7 保安 -->
@@ -528,6 +550,10 @@
     </div>
     <p class="lead rise" style="--d:1.4s">一小时几十次抬手：放行，拦下。夜里巡逻，手电在死角多停两秒。</p>
     <p class="mono rise" style="--d:1.9s">校门小，责任大。我不多话，我看着就行。</p>
+    <div class="back-clock rise" style="--d:2.3s">
+      <button type="button" class="bc-btn" data-back="clock"><span class="bc-ar">←</span>回 到 时 之 眼 · 挑 下 一 个 时 刻</button>
+      <i class="bc-note">或 从 此 页 向 下 滑 动</i>
+    </div>
   </section>
 
   <!-- 8 维修师傅 -->
@@ -553,6 +579,10 @@
     </div>
     <p class="lead rise" style="--d:1.4s">报修单跳出来：307，灯管频闪。他爬上梯子，先断电，再一寸寸排。</p>
     <p class="mono rise" style="--d:1.9s">东西坏了能修。别拖，拖了就耽误人。</p>
+    <div class="back-clock rise" style="--d:2.3s">
+      <button type="button" class="bc-btn" data-back="clock"><span class="bc-ar">←</span>回 到 时 之 眼 · 挑 下 一 个 时 刻</button>
+      <i class="bc-note">或 从 此 页 向 下 滑 动</i>
+    </div>
   </section>
 
   <!-- 9 汇聚：环形时间轴 -->
@@ -700,7 +730,9 @@
           if(dy > 0 && pg.scrollTop > 8){ ty=null; return; }
         }
       }
-      dy<0 ? next() : prev();
+      if(dy < 0){ next(); }
+      else if(pg.classList.contains('person')){ go(2); updateClockUI(); }
+      else { prev(); }
     }
     ty = null;
   }, {passive:true});
@@ -716,12 +748,17 @@
     }
     wheelLock = true;
     setTimeout(function(){ wheelLock=false; }, 900);
-    e.deltaY > 0 ? next() : prev();
+    if(e.deltaY > 0){ next(); }
+    else if(pg.classList.contains('person')){ go(2); updateClockUI(); }
+    else { prev(); }
   }, {passive:true});
 
   window.addEventListener('keydown', function(e){
     if(e.key==='ArrowDown'||e.key==='PageDown'||e.key===' ') next();
-    if(e.key==='ArrowUp'||e.key==='PageUp') prev();
+    if(e.key==='ArrowUp'||e.key==='PageUp'){
+      if(pages[cur] && pages[cur].classList.contains('person')){ go(2); updateClockUI(); }
+      else prev();
+    }
     if(e.key==='Home') go(0);
     if(e.key==='End') go(pages.length-1);
     if(e.key==='Escape') closePeek();
@@ -1374,6 +1411,15 @@
     el.addEventListener('click', function(e){
       e.stopPropagation();
       openPeek(el.getAttribute('data-peek'), el);
+    });
+  });
+
+  /* 回到时之眼：五个人物页的出口 */
+  Array.prototype.forEach.call(document.querySelectorAll('[data-back="clock"]'), function(btn){
+    btn.addEventListener('click', function(e){
+      e.stopPropagation();
+      go(2);
+      updateClockUI();
     });
   });
   peek.addEventListener('click', function(e){ if(e.target === peek) closePeek(); });
